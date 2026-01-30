@@ -18,7 +18,7 @@ jobs:
           tar -xjf ffmpeg-3.4.8.tar.bz2
           cd ffmpeg-3.4.8
           
-          # Añadimos --extra-cflags para que el compilador sea compatible con codigo viejo
+          # DESACTIVAMOS x86asm para saltar el error de 'shr' definitivamente
           ./configure \
             --prefix=$HOME/output \
             --enable-static \
@@ -27,6 +27,7 @@ jobs:
             --arch=x86_64 \
             --target-os=mingw32 \
             --cross-prefix=x86_64-w64-mingw32- \
+            --disable-x86asm \
             --extra-cflags="-fcommon -std=c99"
           
           make -j$(nproc)
