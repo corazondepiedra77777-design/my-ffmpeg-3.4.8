@@ -13,11 +13,12 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y mingw-w64 yasm nasm make wget tar bzip2
 
-      - name: Download and Extract
+      - name: Clean and Download
         run: |
+          # Borramos todo para que no haya conflicto con archivos subidos a mano
+          find . -maxdepth 1 ! -name '.github' ! -name '.' -exec rm -rf {} +
           wget https://www.ffmpeg.org/releases/ffmpeg-3.4.8.tar.bz2
           tar -xjf ffmpeg-3.4.8.tar.bz2
-          # Entramos a la carpeta y movemos todo afuera para que sea facil de encontrar
           mv ffmpeg-3.4.8/* .
 
       - name: Configure
@@ -34,7 +35,7 @@ jobs:
       - name: Compile
         run: make -j$(nproc)
 
-      - name: Install to Output
+      - name: Install
         run: make install
 
       - name: Upload EXE
