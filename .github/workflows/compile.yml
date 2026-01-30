@@ -1,22 +1,26 @@
-name: Compilar FFmpeg 3.4.8
+name: Compilar_FFmpeg_3.4.8
 on: [push, workflow_dispatch]
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Instalar compilador para Windows
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Instalar herramientas de compilacion
         run: |
           sudo apt-get update
-          sudo apt-get install -y mingw-w64 yasm nasm wget
+          sudo apt-get install -y mingw-w64 yasm nasm wget tar bzip2 make
 
-      - name: Descargar codigo fuente oficial 3.4.8
+      - name: Descargar codigo fuente oficial
         run: |
           wget https://ffmpeg.org/releases/ffmpeg-3.4.8.tar.bz2
           tar -xjf ffmpeg-3.4.8.tar.bz2
-          mv ffmpeg-3.4.8/* .
+          # Mover archivos al directorio raiz del trabajo
+          cp -r ffmpeg-3.4.8/* .
 
-      - name: Configurar y Compilar
+      - name: Configurar para Windows
         run: |
           ./configure \
             --prefix=./output \
@@ -26,10 +30,14 @@ jobs:
             --arch=x86_64 \
             --target-os=mingw32 \
             --cross-prefix=x86_64-w64-mingw32-
-          make -j$(nproc)
-          make install
 
-      - name: Guardar el .exe como resultado
+      - name: Ejecutar compilacion
+        run: make -j$(nproc)
+
+      - name: Preparar carpeta de salida
+        run: make install
+
+      - name: Subir binarios (.exe)
         uses: actions/upload-artifact@v4
         with:
           name: ffmpeg-3.4.8-win64
