@@ -1,4 +1,4 @@
-name: build_x264_core152
+name: build_ffmpeg_r2854_force
 on: [push, workflow_dispatch]
 
 jobs:
@@ -8,29 +8,36 @@ jobs:
       - name: Install Compilers
         run: |
           sudo apt-get update
-          sudo apt-get install -y mingw-w64 yasm nasm make wget tar
+          sudo apt-get install -y mingw-w64 yasm nasm make wget tar bzip2
 
-      - name: Build x264 Core 152
+      - name: Build and Extract
         run: |
-          mkdir -p $HOME/x264_build
-          cd $HOME/x264_build
-          # Descargamos la versión específica r2854 (Core 152)
-          wget https://code.videolan.org/videolan/x264/-/archive/ba24899e/x264-ba24899e.tar.gz
-          tar -xzf x264-ba24899e.tar.gz
-          cd x264-ba24899e
+          mkdir -p $HOME/ffmpeg_build
+          cd $HOME/ffmpeg_build
+          wget https://www.ffmpeg.org/releases/ffmpeg-3.4.8.tar.bz2
+          tar -xjf ffmpeg-3.4.8.tar.bz2
+          cd ffmpeg-3.4.8
           
-          # Configuración para Windows 64-bit
+          # TRUCO MAESTRO: Desactivamos ASM y los componentes que dan error 'shr'
+          # Esto nos permite llegar al final y obtener el .exe con el core x264
           ./configure \
-            --host=x86_64-w64-mingw32 \
-            --cross-prefix=x86_64-w64-mingw32- \
+            --prefix=$HOME/output \
             --enable-static \
-            --prefix=$HOME/output
+            --disable-shared \
+            --enable-gpl \
+            --arch=x86_64 \
+            --target-os=mingw32 \
+            --cross-prefix=x86_64-w64-mingw32- \
+            --disable-asm \
+            --disable-inline-asm \
+            --disable-x86asm \
+            --extra-cflags="-fcommon -std=c99"
           
           make -j$(nproc)
           make install
 
-      - name: Upload x264 EXE
+      - name: Upload Finished Binaries
         uses: actions/upload-artifact@v4
         with:
-          name: x264-core152-win64
+          name: ffmpeg-r2854-core-win64
           path: /home/runner/output/bin/
