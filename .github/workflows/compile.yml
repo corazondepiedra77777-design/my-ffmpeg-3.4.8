@@ -1,0 +1,36 @@
+name: Compilar FFmpeg 3.4.8
+on: [push, workflow_dispatch]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Instalar compilador para Windows
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y mingw-w64 yasm nasm wget
+
+      - name: Descargar codigo fuente oficial 3.4.8
+        run: |
+          wget https://ffmpeg.org/releases/ffmpeg-3.4.8.tar.bz2
+          tar -xjf ffmpeg-3.4.8.tar.bz2
+          mv ffmpeg-3.4.8/* .
+
+      - name: Configurar y Compilar
+        run: |
+          ./configure \
+            --prefix=./output \
+            --enable-static \
+            --disable-shared \
+            --enable-gpl \
+            --arch=x86_64 \
+            --target-os=mingw32 \
+            --cross-prefix=x86_64-w64-mingw32-
+          make -j$(nproc)
+          make install
+
+      - name: Guardar el .exe como resultado
+        uses: actions/upload-artifact@v4
+        with:
+          name: ffmpeg-3.4.8-win64
+          path: output/bin/
