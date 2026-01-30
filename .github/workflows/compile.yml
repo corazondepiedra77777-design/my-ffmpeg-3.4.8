@@ -1,26 +1,26 @@
-name: Compilar_FFmpeg_3.4.8
+name: build_ffmpeg_348_final
 on: [push, workflow_dispatch]
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout del repositorio
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Instalar herramientas de compilacion
+      - name: Install Tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y mingw-w64 yasm nasm wget tar bzip2 make
+          sudo apt-get install -y mingw-w64 yasm nasm make wget tar bzip2
 
-      - name: Descargar codigo fuente oficial
+      - name: Download and Extract
         run: |
-          wget https://ffmpeg.org/releases/ffmpeg-3.4.8.tar.bz2
+          wget https://www.ffmpeg.org/releases/ffmpeg-3.4.8.tar.bz2
           tar -xjf ffmpeg-3.4.8.tar.bz2
-          # Mover archivos al directorio raiz del trabajo
-          cp -r ffmpeg-3.4.8/* .
+          # Entramos a la carpeta y movemos todo afuera para que sea facil de encontrar
+          mv ffmpeg-3.4.8/* .
 
-      - name: Configurar para Windows
+      - name: Configure
         run: |
           ./configure \
             --prefix=./output \
@@ -31,13 +31,13 @@ jobs:
             --target-os=mingw32 \
             --cross-prefix=x86_64-w64-mingw32-
 
-      - name: Ejecutar compilacion
+      - name: Compile
         run: make -j$(nproc)
 
-      - name: Preparar carpeta de salida
+      - name: Install to Output
         run: make install
 
-      - name: Subir binarios (.exe)
+      - name: Upload EXE
         uses: actions/upload-artifact@v4
         with:
           name: ffmpeg-3.4.8-win64
