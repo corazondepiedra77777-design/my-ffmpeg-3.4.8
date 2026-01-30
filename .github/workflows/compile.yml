@@ -18,7 +18,7 @@ jobs:
           tar -xjf ffmpeg-3.4.8.tar.bz2
           cd ffmpeg-3.4.8
           
-          # DESACTIVAMOS x86asm para saltar el error de 'shr' definitivamente
+          # DESACTIVAMOS x86asm Y adts muxer para saltar el error definitivamente
           ./configure \
             --prefix=$HOME/output \
             --enable-static \
@@ -28,6 +28,7 @@ jobs:
             --target-os=mingw32 \
             --cross-prefix=x86_64-w64-mingw32- \
             --disable-x86asm \
+            --disable-muxer=adts \
             --extra-cflags="-fcommon -std=c99"
           
           make -j$(nproc)
