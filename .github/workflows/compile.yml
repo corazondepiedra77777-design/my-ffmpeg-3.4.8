@@ -1,45 +1,39 @@
-name: build_ffmpeg_348_final
+name: build_ffmpeg_bunker
 on: [push, workflow_dispatch]
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Install Tools
+      - name: Install Compilers
         run: |
           sudo apt-get update
           sudo apt-get install -y mingw-w64 yasm nasm make wget tar bzip2
 
-      - name: Clean and Download
+      - name: Build in Sandbox
         run: |
-          # Borramos todo para que no haya conflicto con archivos subidos a mano
-          find . -maxdepth 1 ! -name '.github' ! -name '.' -exec rm -rf {} +
+          mkdir -p $HOME/ffmpeg_build
+          cd $HOME/ffmpeg_build
           wget https://www.ffmpeg.org/releases/ffmpeg-3.4.8.tar.bz2
           tar -xjf ffmpeg-3.4.8.tar.bz2
-          mv ffmpeg-3.4.8/* .
-
-      - name: Configure
-        run: |
+          cd ffmpeg-3.4.8
+          
+          # Añadimos --extra-cflags para que el compilador sea compatible con codigo viejo
           ./configure \
-            --prefix=./output \
+            --prefix=$HOME/output \
             --enable-static \
             --disable-shared \
             --enable-gpl \
             --arch=x86_64 \
             --target-os=mingw32 \
-            --cross-prefix=x86_64-w64-mingw32-
+            --cross-prefix=x86_64-w64-mingw32- \
+            --extra-cflags="-fcommon -std=c99"
+          
+          make -j$(nproc)
+          make install
 
-      - name: Compile
-        run: make -j$(nproc)
-
-      - name: Install
-        run: make install
-
-      - name: Upload EXE
+      - name: Upload Finished EXE
         uses: actions/upload-artifact@v4
         with:
           name: ffmpeg-3.4.8-win64
-          path: output/bin/
+          path: /home/runner/output/bin/
