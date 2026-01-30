@@ -1,4 +1,4 @@
-name: build_ffmpeg_bunker
+name: build_x264_core152
 on: [push, workflow_dispatch]
 
 jobs:
@@ -8,34 +8,29 @@ jobs:
       - name: Install Compilers
         run: |
           sudo apt-get update
-          sudo apt-get install -y mingw-w64 yasm nasm make wget tar bzip2
+          sudo apt-get install -y mingw-w64 yasm nasm make wget tar
 
-      - name: Build in Sandbox
+      - name: Build x264 Core 152
         run: |
-          mkdir -p $HOME/ffmpeg_build
-          cd $HOME/ffmpeg_build
-          wget https://www.ffmpeg.org/releases/ffmpeg-3.4.8.tar.bz2
-          tar -xjf ffmpeg-3.4.8.tar.bz2
-          cd ffmpeg-3.4.8
+          mkdir -p $HOME/x264_build
+          cd $HOME/x264_build
+          # Descargamos la versión específica r2854 (Core 152)
+          wget https://code.videolan.org/videolan/x264/-/archive/ba24899e/x264-ba24899e.tar.gz
+          tar -xzf x264-ba24899e.tar.gz
+          cd x264-ba24899e
           
-          # DESACTIVAMOS x86asm Y adts muxer para saltar el error definitivamente
+          # Configuración para Windows 64-bit
           ./configure \
-            --prefix=$HOME/output \
-            --enable-static \
-            --disable-shared \
-            --enable-gpl \
-            --arch=x86_64 \
-            --target-os=mingw32 \
+            --host=x86_64-w64-mingw32 \
             --cross-prefix=x86_64-w64-mingw32- \
-            --disable-x86asm \
-            --disable-muxer=adts \
-            --extra-cflags="-fcommon -std=c99"
+            --enable-static \
+            --prefix=$HOME/output
           
           make -j$(nproc)
           make install
 
-      - name: Upload Finished EXE
+      - name: Upload x264 EXE
         uses: actions/upload-artifact@v4
         with:
-          name: ffmpeg-3.4.8-win64
+          name: x264-core152-win64
           path: /home/runner/output/bin/
